@@ -1,0 +1,607 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="shortcut icon" href="vite.svg" type="image/x-icon" />
+    <!-- *Tailwind -->
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <!-- * Font Awesome -->
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.1/css/all.min.css"
+      integrity="sha512-2SwdPD6INVrV/lHTZbO2nodKhrnDdJK9/kg2XD1r9uGqPo1cUbujc+IYdlYdEErWNu69gVcYgdxlmVmzTWnetw=="
+      crossorigin="anonymous"
+      referrerpolicy="no-referrer"
+    />
+
+    <!-- *Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,100..900;1,100..900&family=Nunito:ital,wght@0,200..1000;1,200..1000&family=Yuji+Mai&display=swap"
+      rel="stylesheet"
+    />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Kannban</title>
+  </head>
+  <body
+    class="bg-slate-100 font-[Inter] min-h-screen text-slate-800"
+    style="font-family: &quot;Yuji Mai&quot;, serif"
+  >
+    <div id="app" class="min-h-screen flex flex-col">
+      <!-- Header Bar -->
+      <header
+        class="bg-gradient-to-r from-indigo-600 to-purple-600 text-white shadow-md sticky top-0 z-40"
+      >
+        <div
+          class="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between"
+        >
+          <div class="flex items-center gap-3">
+            <i class="fa-solid fa-table-columns text-2xl"></i>
+            <h1 class="text-xl font-bold tracking-tight">Kanban</h1>
+          </div>
+          <div class="flex items-center gap-2">
+            <button
+              class="w-10 h-10 rounded-lg bg-white/20 hover:bg-white/30 transition-colors flex items-center justify-center"
+              id="add-task-btn"
+              title="Create Task"
+            >
+              <i class="fa-solid fa-plus"></i>
+            </button>
+          </div>
+        </div>
+      </header>
+
+      <!-- Modal Overlay -->
+      <div
+        id="modal-overlay"
+        class="fixed inset-0 bg-black/50 z-50 items-center justify-center p-4 flex hidden"
+      >
+        <!-- Modal Content -->
+        <div
+          id="task-modal"
+          class="bg-white rounded-2xl shadow-xl w-full max-w-lg max-h-[90vh] overflow-y-auto transform transition-all"
+        >
+          <div
+            class="flex items-center justify-between p-5 border-b border-slate-200"
+          >
+            <h2
+              id="modal-title"
+              class="text-lg font-semibold text-slate-800 flex items-center gap-2"
+            >
+              Create New Task
+            </h2>
+            <button
+              id="close-modal-btn"
+              class="w-8 h-8 rounded-lg hover:bg-slate-100 flex items-center justify-center text-slate-400 hover:text-slate-600 transition-colors"
+            >
+              <i class="fa-solid fa-xmark text-lg"></i>
+            </button>
+          </div>
+
+          <form id="task-form" class="p-5" novalidate="">
+            <div class="mb-4">
+              <label
+                for="task-title"
+                class="flex items-center gap-2 text-sm font-medium text-slate-700 mb-2"
+              >
+                <i class="fa-solid fa-heading text-slate-400"></i>
+                Task Title <span class="text-red-500">*</span>
+              </label>
+              <input
+                type="text"
+                id="task-title"
+                name="title"
+                placeholder="What needs to be done?"
+                autocomplete="off"
+                class="w-full px-4 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all placeholder:text-slate-400"
+              />
+              <p id="title-error" class="text-red-500 text-xs mt-1 hidden"></p>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
+              <div>
+                <label
+                  for="task-priority"
+                  class="flex items-center gap-2 text-sm font-medium text-slate-700 mb-2"
+                >
+                  <i class="fa-solid fa-flag text-slate-400"></i>
+                  Priority
+                </label>
+                <select
+                  id="task-priority"
+                  name="priority"
+                  class="w-full px-4 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all bg-white cursor-pointer"
+                >
+                  <option value="low">Low</option>
+                  <option value="medium" selected="">Medium</option>
+                  <option value="high">High</option>
+                </select>
+              </div>
+
+              <div>
+                <label
+                  for="task-due-date"
+                  class="flex items-center gap-2 text-sm font-medium text-slate-700 mb-2"
+                >
+                  <i class="fa-regular fa-calendar text-slate-400"></i>
+                  Due Date
+                </label>
+                <input
+                  type="date"
+                  id="task-due-date"
+                  name="dueDate"
+                  class="w-full px-4 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all"
+                />
+                <p id="date-error" class="text-red-500 text-xs mt-1 hidden"></p>
+              </div>
+            </div>
+
+            <div class="mb-5">
+              <label
+                for="task-description"
+                class="flex items-center gap-2 text-sm font-medium text-slate-700 mb-2"
+              >
+                <i class="fa-solid fa-align-left text-slate-400"></i>
+                Description
+              </label>
+              <textarea
+                id="task-description"
+                name="description"
+                placeholder="Add more details about this task..."
+                rows="3"
+                maxlength="500"
+                class="w-full px-4 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all resize-none placeholder:text-slate-400"
+              ></textarea>
+              <div class="flex justify-between items-center mt-1">
+                <p
+                  id="description-error"
+                  class="text-red-500 text-xs hidden"
+                ></p>
+                <p id="char-count" class="text-slate-400 text-xs ml-auto">
+                  0/500
+                </p>
+              </div>
+            </div>
+
+            <div class="flex gap-3">
+              <button
+                type="button"
+                id="cancel-btn"
+                class="flex-1 bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium py-2.5 px-4 rounded-lg transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                id="submit-btn"
+                class="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-2.5 px-4 rounded-lg transition-colors flex items-center justify-center gap-2"
+              >
+                <i class="fa-solid fa-plus"></i>
+                <span id="submit-btn-text">Add Task</span>
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <!-- Kanban Board -->
+      <main
+        class="flex-1 px-4 py-8 bg-gradient-to-br from-slate-100 via-slate-50 to-indigo-50/30"
+      >
+        <div
+          id="columns-container"
+          class="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-6"
+        >
+          <div
+            class="bg-white/60 backdrop-blur-sm rounded-2xl p-5 flex flex-col min-h-[500px] border border-slate-200/50 shadow-sm"
+            data-status="todo"
+          >
+            <div class="flex items-center gap-3 mb-5">
+              <div
+                class="w-10 h-10 bg-slate-100 rounded-xl flex items-center justify-center"
+              >
+                <i
+                  class="fa-solid fa-clipboard-list text-slate-500 text-lg"
+                ></i>
+              </div>
+              <div class="flex-1">
+                <h2 class="font-semibold text-slate-800">To Do</h2>
+                <p class="text-xs text-slate-400">1 task</p>
+              </div>
+            </div>
+            <div
+              class="flex-1 flex flex-col gap-4 overflow-y-auto pr-1 -mr-1"
+              id="tasks-todo"
+            >
+              <div
+                class="group bg-white rounded-xl p-4 shadow-sm border border-slate-100 hover:shadow-md hover:border-slate-200 transition-all duration-200 ring-2 ring-red-100 border-red-200"
+                data-task-id="task-1768976206449-fupvo25"
+              >
+                <!-- Top Bar -->
+                <div class="flex items-center justify-between mb-3">
+                  <div class="flex items-center gap-2">
+                    <span class="w-2 h-2 rounded-full bg-slate-300"></span>
+                    <span
+                      class="text-[10px] font-medium text-slate-400 uppercase tracking-wider"
+                      >#002</span
+                    >
+                  </div>
+                  <div
+                    class="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity"
+                  >
+                    <button
+                      class="edit-btn text-slate-400 hover:text-indigo-500 hover:bg-indigo-50 w-7 h-7 rounded-lg flex items-center justify-center transition-colors"
+                      data-task-id="task-1768976206449-fupvo25"
+                      title="Edit task"
+                    >
+                      <i
+                        class="fa-solid fa-pen text-xs pointer-events-none"
+                      ></i>
+                    </button>
+                    <button
+                      class="delete-btn text-slate-400 hover:text-red-500 hover:bg-red-50 w-7 h-7 rounded-lg flex items-center justify-center transition-colors"
+                      data-task-id="task-1768976206449-fupvo25"
+                      title="Delete task"
+                    >
+                      <i
+                        class="fa-solid fa-trash-can text-xs pointer-events-none"
+                      ></i>
+                    </button>
+                  </div>
+                </div>
+
+                <!-- Title -->
+                <h3 class="font-semibold text-slate-800 mb-2 leading-snug">
+                  title02
+                </h3>
+
+                <!-- Description -->
+
+                <p
+                  class="text-slate-500 text-sm mb-4 leading-relaxed line-clamp-2"
+                >
+                  description
+                </p>
+
+                <!-- Tags Row -->
+                <div class="flex flex-wrap items-center gap-2 mb-4">
+                  <!-- Priority Badge -->
+                  <span
+                    class="bg-blue-50 text-blue-600 text-[10px] font-semibold px-2 py-1 rounded-full flex items-center gap-1.5 uppercase tracking-wide"
+                  >
+                    <span class="w-1.5 h-1.5 rounded-full bg-blue-500"></span>
+                    Low
+                  </span>
+
+                  <span
+                    class="bg-red-100 text-red-600 text-[10px] font-semibold px-2 py-1 rounded-full uppercase tracking-wide flex items-center gap-1"
+                  >
+                    <i class="fa-solid fa-triangle-exclamation"></i>
+                    Overdue
+                  </span>
+                </div>
+
+                <!-- Meta Info -->
+                <div
+                  class="flex items-center gap-3 text-xs text-slate-400 pb-3 mb-3 border-b border-slate-100"
+                >
+                  <div class="flex items-center gap-1.5 text-red-500">
+                    <i class="fa-regular fa-calendar"></i>
+                    <span>Jan 21</span>
+                  </div>
+
+                  <div
+                    class="flex items-center gap-1.5"
+                    title="Created 1/21/2026, 8:16:46 AM"
+                  >
+                    <i class="fa-regular fa-clock"></i>
+                    <span>1m ago</span>
+                  </div>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="flex flex-wrap gap-2">
+                  <button
+                    class="status-btn text-[11px] px-3 py-2 rounded-lg font-semibold transition-all duration-200 flex items-center gap-1.5 hover:scale-105 active:scale-95 bg-amber-100 text-amber-700 hover:bg-amber-200"
+                    data-task-id="task-1768976206449-fupvo25"
+                    data-status="in-progress"
+                  >
+                    <i class="fa-solid fa-play pointer-events-none"></i>
+                    <span class="pointer-events-none">Start</span>
+                  </button>
+
+                  <button
+                    class="status-btn text-[11px] px-3 py-2 rounded-lg font-semibold transition-all duration-200 flex items-center gap-1.5 hover:scale-105 active:scale-95 bg-emerald-100 text-emerald-700 hover:bg-emerald-200"
+                    data-task-id="task-1768976206449-fupvo25"
+                    data-status="completed"
+                  >
+                    <i class="fa-solid fa-check pointer-events-none"></i>
+                    <span class="pointer-events-none">Complete</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div
+            class="bg-white/60 backdrop-blur-sm rounded-2xl p-5 flex flex-col min-h-[500px] border border-slate-200/50 shadow-sm"
+            data-status="in-progress"
+          >
+            <div class="flex items-center gap-3 mb-5">
+              <div
+                class="w-10 h-10 bg-amber-50 rounded-xl flex items-center justify-center"
+              >
+                <i class="fa-solid fa-spinner text-amber-500 text-lg"></i>
+              </div>
+              <div class="flex-1">
+                <h2 class="font-semibold text-slate-800">In Progress</h2>
+                <p class="text-xs text-slate-400">1 task</p>
+              </div>
+            </div>
+            <div
+              class="flex-1 flex flex-col gap-4 overflow-y-auto pr-1 -mr-1"
+              id="tasks-in-progress"
+            >
+              <div
+                class="group bg-white rounded-xl p-4 shadow-sm border border-slate-100 hover:shadow-md hover:border-slate-200 transition-all duration-200"
+                data-task-id="task-1768976184170-ppgu7be"
+              >
+                <!-- Top Bar -->
+                <div class="flex items-center justify-between mb-3">
+                  <div class="flex items-center gap-2">
+                    <span class="w-2 h-2 rounded-full bg-amber-400"></span>
+                    <span
+                      class="text-[10px] font-medium text-slate-400 uppercase tracking-wider"
+                      >#001</span
+                    >
+                  </div>
+                  <div
+                    class="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity"
+                  >
+                    <button
+                      class="edit-btn text-slate-400 hover:text-indigo-500 hover:bg-indigo-50 w-7 h-7 rounded-lg flex items-center justify-center transition-colors"
+                      data-task-id="task-1768976184170-ppgu7be"
+                      title="Edit task"
+                    >
+                      <i
+                        class="fa-solid fa-pen text-xs pointer-events-none"
+                      ></i>
+                    </button>
+                    <button
+                      class="delete-btn text-slate-400 hover:text-red-500 hover:bg-red-50 w-7 h-7 rounded-lg flex items-center justify-center transition-colors"
+                      data-task-id="task-1768976184170-ppgu7be"
+                      title="Delete task"
+                    >
+                      <i
+                        class="fa-solid fa-trash-can text-xs pointer-events-none"
+                      ></i>
+                    </button>
+                  </div>
+                </div>
+
+                <!-- Title -->
+                <h3 class="font-semibold text-slate-800 mb-2 leading-snug">
+                  title
+                </h3>
+
+                <!-- Description -->
+
+                <p
+                  class="text-slate-500 text-sm mb-4 leading-relaxed line-clamp-2"
+                >
+                  description
+                </p>
+
+                <!-- Tags Row -->
+                <div class="flex flex-wrap items-center gap-2 mb-4">
+                  <!-- Priority Badge -->
+                  <span
+                    class="bg-amber-50 text-amber-600 text-[10px] font-semibold px-2 py-1 rounded-full flex items-center gap-1.5 uppercase tracking-wide"
+                  >
+                    <span class="w-1.5 h-1.5 rounded-full bg-amber-500"></span>
+                    Medium
+                  </span>
+
+                  <span
+                    class="bg-orange-100 text-orange-600 text-[10px] font-semibold px-2 py-1 rounded-full uppercase tracking-wide"
+                  >
+                    Due Soon
+                  </span>
+                </div>
+
+                <!-- Meta Info -->
+                <div
+                  class="flex items-center gap-3 text-xs text-slate-400 pb-3 mb-3 border-b border-slate-100"
+                >
+                  <div class="flex items-center gap-1.5 text-orange-500">
+                    <i class="fa-regular fa-calendar"></i>
+                    <span>Jan 22</span>
+                  </div>
+
+                  <div
+                    class="flex items-center gap-1.5"
+                    title="Created 1/21/2026, 8:16:24 AM"
+                  >
+                    <i class="fa-regular fa-clock"></i>
+                    <span>2m ago</span>
+                  </div>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="flex flex-wrap gap-2">
+                  <button
+                    class="status-btn text-[11px] px-3 py-2 rounded-lg font-semibold transition-all duration-200 flex items-center gap-1.5 hover:scale-105 active:scale-95 bg-slate-100 text-slate-600 hover:bg-slate-200 hover:text-slate-700"
+                    data-task-id="task-1768976184170-ppgu7be"
+                    data-status="todo"
+                  >
+                    <i
+                      class="fa-solid fa-arrow-rotate-left pointer-events-none"
+                    ></i>
+                    <span class="pointer-events-none">To Do</span>
+                  </button>
+
+                  <button
+                    class="status-btn text-[11px] px-3 py-2 rounded-lg font-semibold transition-all duration-200 flex items-center gap-1.5 hover:scale-105 active:scale-95 bg-emerald-100 text-emerald-700 hover:bg-emerald-200"
+                    data-task-id="task-1768976184170-ppgu7be"
+                    data-status="completed"
+                  >
+                    <i class="fa-solid fa-check pointer-events-none"></i>
+                    <span class="pointer-events-none">Complete</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div
+            class="bg-white/60 backdrop-blur-sm rounded-2xl p-5 flex flex-col min-h-[500px] border border-slate-200/50 shadow-sm"
+            data-status="completed"
+          >
+            <div class="flex items-center gap-3 mb-5">
+              <div
+                class="w-10 h-10 bg-emerald-50 rounded-xl flex items-center justify-center"
+              >
+                <i
+                  class="fa-solid fa-circle-check text-emerald-500 text-lg"
+                ></i>
+              </div>
+              <div class="flex-1">
+                <h2 class="font-semibold text-slate-800">Completed</h2>
+                <p class="text-xs text-slate-400">1 task</p>
+              </div>
+            </div>
+            <div
+              class="flex-1 flex flex-col gap-4 overflow-y-auto pr-1 -mr-1"
+              id="tasks-completed"
+            >
+              <div
+                class="group bg-white rounded-xl p-4 shadow-sm border border-slate-100 hover:shadow-md hover:border-slate-200 transition-all duration-200 opacity-75"
+                data-task-id="task-1768976236005-9wa38zd"
+              >
+                <!-- Top Bar -->
+                <div class="flex items-center justify-between mb-3">
+                  <div class="flex items-center gap-2">
+                    <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+                    <span
+                      class="text-[10px] font-medium text-slate-400 uppercase tracking-wider"
+                      >#003</span
+                    >
+                  </div>
+                  <div
+                    class="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity"
+                  >
+                    <button
+                      class="edit-btn text-slate-400 hover:text-indigo-500 hover:bg-indigo-50 w-7 h-7 rounded-lg flex items-center justify-center transition-colors"
+                      data-task-id="task-1768976236005-9wa38zd"
+                      title="Edit task"
+                    >
+                      <i
+                        class="fa-solid fa-pen text-xs pointer-events-none"
+                      ></i>
+                    </button>
+                    <button
+                      class="delete-btn text-slate-400 hover:text-red-500 hover:bg-red-50 w-7 h-7 rounded-lg flex items-center justify-center transition-colors"
+                      data-task-id="task-1768976236005-9wa38zd"
+                      title="Delete task"
+                    >
+                      <i
+                        class="fa-solid fa-trash-can text-xs pointer-events-none"
+                      ></i>
+                    </button>
+                  </div>
+                </div>
+
+                <!-- Title -->
+                <h3
+                  class="font-semibold text-slate-800 mb-2 leading-snug line-through text-slate-500"
+                >
+                  title03
+                </h3>
+
+                <!-- Description -->
+
+                <p
+                  class="text-slate-500 text-sm mb-4 leading-relaxed line-clamp-2"
+                >
+                  description
+                </p>
+
+                <!-- Tags Row -->
+                <div class="flex flex-wrap items-center gap-2 mb-4">
+                  <!-- Priority Badge -->
+                  <span
+                    class="bg-red-50 text-red-600 text-[10px] font-semibold px-2 py-1 rounded-full flex items-center gap-1.5 uppercase tracking-wide"
+                  >
+                    <span class="w-1.5 h-1.5 rounded-full bg-red-500"></span>
+                    High Priority
+                  </span>
+
+                  <span
+                    class="bg-emerald-100 text-emerald-600 text-[10px] font-semibold px-2 py-1 rounded-full uppercase tracking-wide flex items-center gap-1"
+                  >
+                    <i class="fa-solid fa-check"></i>
+                    Done
+                  </span>
+                </div>
+
+                <!-- Meta Info -->
+                <div
+                  class="flex items-center gap-3 text-xs text-slate-400 pb-3 mb-3 border-b border-slate-100"
+                >
+                  <div class="flex items-center gap-1.5">
+                    <i class="fa-regular fa-calendar"></i>
+                    <span>Feb 7</span>
+                  </div>
+
+                  <div
+                    class="flex items-center gap-1.5"
+                    title="Created 1/21/2026, 8:17:16 AM"
+                  >
+                    <i class="fa-regular fa-clock"></i>
+                    <span>1m ago</span>
+                  </div>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="flex flex-wrap gap-2">
+                  <button
+                    class="status-btn text-[11px] px-3 py-2 rounded-lg font-semibold transition-all duration-200 flex items-center gap-1.5 hover:scale-105 active:scale-95 bg-slate-100 text-slate-600 hover:bg-slate-200 hover:text-slate-700"
+                    data-task-id="task-1768976236005-9wa38zd"
+                    data-status="todo"
+                  >
+                    <i
+                      class="fa-solid fa-arrow-rotate-left pointer-events-none"
+                    ></i>
+                    <span class="pointer-events-none">To Do</span>
+                  </button>
+
+                  <button
+                    class="status-btn text-[11px] px-3 py-2 rounded-lg font-semibold transition-all duration-200 flex items-center gap-1.5 hover:scale-105 active:scale-95 bg-amber-100 text-amber-700 hover:bg-amber-200"
+                    data-task-id="task-1768976236005-9wa38zd"
+                    data-status="in-progress"
+                  >
+                    <i class="fa-solid fa-play pointer-events-none"></i>
+                    <span class="pointer-events-none">Start</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </main>
+
+      <!-- Footer -->
+      <footer
+        class="bg-gradient-to-r from-slate-800 to-slate-900 text-center py-5 mt-auto border-t border-slate-700/50"
+      >
+        <p
+          class="text-slate-400 text-sm flex items-center justify-center gap-2"
+        >
+          Made with
+          <i class="fa-solid fa-heart text-rose-500 animate-pulse"></i> by Route
+          Academy
+        </p>
+      </footer>
+    </div>
+    <script src="index.js"></script>
+  </body>
+</html>
